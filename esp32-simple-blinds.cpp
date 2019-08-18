@@ -8,7 +8,7 @@
 #include <ArduinoOTA.h>
 #include <WiFi.h>
 #include <WebSocketsServer.h>
-#include "Simple28BYJ48.h"
+#include <Simple28BYJ48.h>
 #include "credentials.h"
 
 // Globals
