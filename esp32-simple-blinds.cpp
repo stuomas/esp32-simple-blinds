@@ -4,8 +4,9 @@
  * encoded integer via the websocket.
  */
 
-#include <WiFi.h>
+#include <Arduino.h>
 #include <ArduinoOTA.h>
+#include <WiFi.h>
 #include <WebSocketsServer.h>
 #include "Simple28BYJ48.h"
 #include "credentials.h"
@@ -16,12 +17,17 @@ const char* password = WIFI_PASSWORD;
 Simple28BYJ48 stepper(12, 14, 27, 26);
 WebSocketsServer webSocket = WebSocketsServer(80);
 
+int bin_to_int_le(uint8_t* bin)
+{
+    // Convert binary data to int (little-endian representation)
+    return (bin[0] << 24) | (bin[1] << 16) | (bin[2] << 8) | (bin[3]);
+}
+
 void websocket_event(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
 {
     switch (type) {
     case WStype_BIN: {
-        int integ = bin_to_int_le(payload);
-        stepper.move_to_pos(integ);
+        stepper.set_target_pos(bin_to_int_le(payload));
         // webSocket.sendBIN(num, payload, length); //optional response
     } break;
     // Other types ignored at the moment!
@@ -36,12 +42,6 @@ void websocket_event(uint8_t num, WStype_t type, uint8_t* payload, size_t length
     default:
         break;
     }
-}
-
-int bin_to_int_le(uint8_t* bin)
-{
-    // Convert binary data to int (little-endian representation)
-    return (bin[0] << 24) | (bin[1] << 16) | (bin[2] << 8) | (bin[3]);
 }
 
 void setup()
@@ -98,6 +98,7 @@ void setup()
 
 void loop()
 {
-    webSocket.loop();
     ArduinoOTA.handle();
+    webSocket.loop();
+    stepper.keep_target_pos();
 }
